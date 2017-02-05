@@ -22,6 +22,8 @@ const sass = require('node-sass-middleware');
 const passportConfig = require('./config/passport');
 const popupTools = require('popup-tools');
 
+var http = require('http');
+
 // Load envirountment variables from .env file
 dotenv.load({ path: '.env' });
 // Set up MongoDB
@@ -155,11 +157,16 @@ app.use('/', require('./routes'));
  * Server run on https://localhost:3000
  */
 
+/*
 app.listen(app.get('port'), (err) => {
   if (err) {
     throw err;
   }
   console.log('%s App is running at http://localhost:%d in %s mode', chalk.green('✓'), app.get('port'), app.get('env')); // eslint-disable-line no-console
 });
+*/
+
+var httpServer = http.createServer(app);
+httpServer.listen(80);
 
 module.exports = app;
