@@ -26,8 +26,8 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const options = {
-    key: fs.readFileSync('./src/key.pem'),
-    cert: fs.readFileSync('./src/cert.pem')
+    key: fs.readFileSync('./privkey.pem'),
+    cert: fs.readFileSync('./fullchain.pem')
 };
 
 // Load envirountment variables from .env file
