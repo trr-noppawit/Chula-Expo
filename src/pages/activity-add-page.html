@@ -5,7 +5,7 @@
 <link rel="import" href="/public/lib/paper-card/paper-card.html">
 <link rel="import" href="/public/lib/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/public/lib/paper-autocomplete/paper-autocomplete.html">
-<link rel="import" href="/public/lib/paper-tags-input/paper-tags-input.html">
+<link rel="import" href="/public/lib/paper-select/paper-select.html">
 <link rel="import" href="/public/lib/paper-input/paper-textarea.html">
 <link rel="import" href="/public/lib/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="/public/lib/greenyouse-datetime-local-input/datetime-local-input.html">
@@ -75,7 +75,7 @@
     </style>
     <div class="container">
       <paper-card>
-				<form is="iron-form" id="form" method="post" class="card-content"
+				<form is="iron-form" id="form" method="post" class="card-content" headers="{{headers}}"
 					action="/api/activities" on-iron-form-presubmit="_presubmit" on-iron-form-response="_response">
 					<div class="card-content">
 						<!-- Thumbnail Upload -->
@@ -89,7 +89,7 @@
 										target="/upload/img/activities/thumbnail"
 										method="POST"
                     max-files="1"
-										headers="{'Authorization': 'JWT {{token}}'}"
+										headers="{{headers}}"
 										form-data-name="picture"
 									>
 										<div class="drop-label">
@@ -243,7 +243,9 @@
                       if (req.status === 200) {
                         var data = JSON.parse(req.response);
                         var arr = data.results.map(function(obj){
-                          return { name:obj.name.en, value:obj['_id'] };
+                          console.log(obj);
+                        //  var zone = JSON.parse(obj.zone);
+                          return { name:obj.name.en/*+" - "+zone.name.en*/, value:obj['_id'] };
                         });
                         comboboxPlace.items = arr;
                       }
@@ -269,11 +271,11 @@
   									req.open('GET',encodeURI(url));
   									req.onload = function() {
   										if (req.status === 200) {
-//  											var data = JSON.parse(req.response);
-  //											var arr = data.results.map(function(obj){
-  	//											return { name:obj.name.en, value:obj['_id'] };
-  		//									});
-        //                comboboxRoom.items = arr;
+ 											var data = JSON.parse(req.response);
+  											var arr = data.results.map(function(obj){
+  												return { name:obj.name.en/*+" - "+obj.place.name.en*/, value:obj['_id'] };
+  											});
+                        comboboxRoom.items = arr;
   										}
   									};
   									req.send();
@@ -326,7 +328,7 @@
 							accept="image/*"
 							target="/upload/img/activities/picture"
 							method="POST"
-							headers="{'Authorization': 'JWT {{token}}'}"
+							headers="{{headers}}"
 							form-data-name="picture"
 						>
 							<div class="drop-label">
@@ -349,7 +351,14 @@
             </script>
 						<!-- Tags -->
 						<div class="item">
-							<paper-tags-input name="tags" label="Tags" tags="{{tags_list}}"></paper-tags-input>
+							<paper-select
+                multiple
+                label-field="tags"
+                bind-value="{{tags}}"
+                select-on-blur
+                label="เลือก tags สำหรับกิจกรรม"
+                on-input-changed="inputChanged"
+              ></paper-select>
 						</div>
 					</div>
 
@@ -378,6 +387,12 @@
           type: Number,
           value: 13.7383777
         },
+        headers: {
+          type: Object,
+          value: {
+            'Authorization': 'JWT ' + document.querySelector('chulaexpo-staff-app').token
+          }
+        },
         longitude: {
           type: Number,
           value: 100.53205279999997
@@ -386,20 +401,26 @@
           type: Number,
           value: 16
         },
-        tags_list: {
-          type: Array,
-          value: ['Chula Expo']
-        },
         pictures: {
           type: Set,
           value: new Set()
-        }
+        },
       },
-      attached: function(event) {
-        console.log(event);
+      attached: function(e) {
         this.$.addActivityMaps.resize();
       },
-      _delayedSubmit: function(event) {
+      inputChanged: function(e) {
+        var data = ['Royal Duties','Thailand 4.0','Energy','Inventions','Design','IT','Medication','Body','Mind','Environment','Life','Food &  Water','Beauty','Quality of Life','Aging Society','Economy','Community','Social Issues','Education','Communication','Transportation','Thai Wisdom','Art & Culture','Law'];
+        var input = (e.detail.value || '').trim().toLowerCase();
+        if (input) {
+          e.target.options = data.filter(function(item) {
+            return item.toLowerCase().indexOf(input) === 0;
+          });
+        } else {
+          e.target.options = [];
+        }
+      },
+      _delayedSubmit: function(e) {
         var form = this.$.form;
         this.$.spinner.active = true;
         this.$.spinner.hidden = false;
@@ -426,6 +447,7 @@
           this.pictures.forEach(function(key,value, Set) {
             dom.$.form.request.body.pictures.push(key);
           });
+          this.$.form.request.body.tags = this.tags;
       }
     })
   </script>

@@ -22,7 +22,13 @@ const sass = require('node-sass-middleware');
 const passportConfig = require('./config/passport');
 const popupTools = require('popup-tools');
 
-var http = require('http');
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
+const options = {
+    key: fs.readFileSync('./src/key.pem'),
+    cert: fs.readFileSync('./src/cert.pem')
+};
 
 // Load envirountment variables from .env file
 dotenv.load({ path: '.env' });
@@ -154,10 +160,13 @@ app.get('/auth/facebook/callback', (req, res, next) => {
 app.use('/', require('./routes'));
 
 /**
- * Server run on https://localhost:3000
+ * Server run on localhost:3000
  */
+//<<<<<<< HEAD
 
 /*
+=======
+>>>>>>> d812253d4877d3f819ce070ef9dac4f4c5742ab5
 app.listen(app.get('port'), (err) => {
   if (err) {
     throw err;
@@ -166,7 +175,25 @@ app.listen(app.get('port'), (err) => {
 });
 */
 
-var httpServer = http.createServer(app);
-httpServer.listen(80);
+https.createServer(options, app).listen(443);
+
+// Redirect from http port 80 to https
+http.createServer(function (req, res) {
+    res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
+    res.end();
+}).listen(80);
+
+
+/**
+ * Server run on https://localhost:3000
+
+const https = require('https');
+const fs = require('fs');
+const options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+https.createServer(options, app).listen(3000);
+*/
 
 module.exports = app;
